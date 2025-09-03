@@ -34,6 +34,7 @@ const {
   activeSpeechVoice,
   activeSpeechVoiceId,
   pitch,
+  streamingTtsEnabled,
   isLoadingSpeechProviderVoices,
   supportsModelListing,
   providerModels,
@@ -365,6 +366,11 @@ function updateCustomModelName(value: string) {
               :description="t('settings.pages.providers.provider.common.fields.field.pitch.description')"
               :min="-100" :max="100" :step="1"
               :format-value="value => `${value}%`"
+            />
+            <FieldCheckbox
+              v-model="streamingTtsEnabled"
+              :label="t('settings.pages.providers.provider.common.fields.field.streaming-tts-enabled.label') || '流式TTS（边听边出）'"
+              :description="t('settings.pages.providers.provider.common.fields.field.streaming-tts-enabled.description') || '开启后按句子/字数分段合成；关闭则整段合成。'"
             />
             <!-- SSML Support -->
             <FieldCheckbox

@@ -101,7 +101,7 @@ const audioQueue = useQueue<{ audioBuffer: AudioBuffer, text: string }>({
 })
 
 const speechStore = useSpeechStore()
-const { ssmlEnabled, activeSpeechProvider, activeSpeechModel, activeSpeechVoice, pitch } = storeToRefs(speechStore)
+const { ssmlEnabled, activeSpeechProvider, activeSpeechModel, activeSpeechVoice, pitch, streamingTtsEnabled } = storeToRefs(speechStore)
 
 async function handleSpeechGeneration(ctx: { data: string }) {
   try {
@@ -218,7 +218,8 @@ onBeforeSend(async () => {
 })
 
 onTokenLiteral(async (literal) => {
-  await messageContentQueue.add(literal)
+  if (streamingTtsEnabled.value)
+    await messageContentQueue.add(literal)
 })
 
 onTokenSpecial(async (special) => {
@@ -230,7 +231,44 @@ onStreamEnd(async () => {
   await delaysQueue.add(llmInferenceEndToken)
 })
 
-onAssistantResponseEnd(async (_message) => {
+onAssistantResponseEnd(async (message) => {
+  if (!streamingTtsEnabled.value) {
+    try {
+      if (!activeSpeechProvider.value) {
+        console.warn('No active speech provider configured')
+        return
+      }
+
+      if (!activeSpeechVoice.value) {
+        console.warn('No active speech voice configured')
+        return
+      }
+
+      const provider = await providersStore.getProviderInstance(activeSpeechProvider.value) as SpeechProviderWithExtraOptions<string, UnElevenLabsOptions>
+      if (!provider) {
+        console.error('Failed to initialize speech provider')
+        return
+      }
+
+      const providerConfig = providersStore.getProviderConfig(activeSpeechProvider.value)
+
+      const input = ssmlEnabled.value
+        ? speechStore.generateSSML(message, activeSpeechVoice.value, { ...providerConfig, pitch: pitch.value })
+        : message
+
+      const res = await generateSpeech({
+        ...provider.speech(activeSpeechModel.value, providerConfig),
+        input,
+        voice: activeSpeechVoice.value.id,
+      })
+
+      const audioBuffer = await audioContext.decodeAudioData(res)
+      await audioQueue.add({ audioBuffer, text: message })
+    }
+    catch (error) {
+      console.error('Whole-message speech generation failed:', error)
+    }
+  }
   // const res = await embed({
   //   ...transformersProvider.embed('Xenova/nomic-embed-text-v1'),
   //   input: message,

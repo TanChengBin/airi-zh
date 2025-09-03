@@ -319,6 +319,9 @@ pages:
             ssml-enabled:
               description: 启用语音合成标记语言，以获得对语音输出的更多控制
               label: 启用 SSML
+            streaming-tts-enabled:
+              label: 流式TTS（边听边出）
+              description: 开启后按句子/字数分段合成；关闭则整段合成。
             voice-id:
               description: 输入自定义语音的语音 ID
               label: 语音 ID
