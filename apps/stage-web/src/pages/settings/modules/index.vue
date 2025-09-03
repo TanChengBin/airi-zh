@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { IconStatusItem } from '@proj-airi/stage-ui/components'
 import { useConsciousnessStore } from '@proj-airi/stage-ui/stores/modules/consciousness'
+import { useHearingStore } from '@proj-airi/stage-ui/stores/modules/hearing'
 import { useSpeechStore } from '@proj-airi/stage-ui/stores/modules/speech'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -46,7 +47,7 @@ const modulesList = computed<Module[]>(() => [
     description: t('settings.pages.modules.hearing.description'),
     icon: 'i-solar:microphone-3-bold-duotone',
     to: '/settings/modules/hearing',
-    configured: false,
+    configured: useHearingStore().configured,
   },
   {
     id: 'vision',

@@ -2,7 +2,7 @@ import { useDevicesList, useUserMedia } from '@vueuse/core'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 export function useAudioDevice() {
-  const devices = useDevicesList({ constraints: { audio: true }, requestPermissions: true })
+  const devices = useDevicesList({ constraints: { audio: true }, requestPermissions: false })
   const audioInputs = computed(() => devices.audioInputs.value)
   const selectedAudioInput = ref<string>(devices.audioInputs.value[0]?.deviceId || '')
   const deviceConstraints = computed<MediaStreamConstraints>(() => ({ audio: { deviceId: { exact: selectedAudioInput.value }, autoGainControl: true, echoCancellation: true, noiseSuppression: true } }))

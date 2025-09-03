@@ -199,6 +199,17 @@ export const useSettingsAudioDevice = defineStore('settings-audio-devices', () =
     }
   })
 
+  // 确保当设备列表加载后，如果没有选择设备，则选择第一个
+  watch(audioInputs, (devices) => {
+    console.warn('[音频设备] 设备列表更新:', devices.length, '个设备')
+    if (devices.length > 0 && (!selectedAudioInputPersist.value || selectedAudioInputPersist.value.length === 0)) {
+      const defaultDevice = devices.find(device => device.deviceId === 'default')
+      const selectedDevice = defaultDevice?.deviceId || devices[0].deviceId
+      selectedAudioInputPersist.value = selectedDevice
+      console.warn('[音频设备] 自动选择设备:', selectedDevice)
+    }
+  })
+
   onMounted(() => {
     if (selectedAudioInputEnabledPersist.value && selectedAudioInputPersist.value) {
       startStream()

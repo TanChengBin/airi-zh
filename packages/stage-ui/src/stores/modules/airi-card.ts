@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n'
 import SystemPromptV2 from '../../constants/prompts/system-v2'
 
 import { useConsciousnessStore } from './consciousness'
+import { useHearingStore } from './hearing'
 import { useSpeechStore } from './speech'
 
 export interface AiriExtension {
@@ -25,6 +26,10 @@ export interface AiriExtension {
       rate?: number
       ssml?: boolean
       language?: string
+    }
+
+    hearing: {
+      model: string // Example: "whisper-1"
     }
 
     vrm?: {
@@ -61,6 +66,7 @@ export const useAiriCardStore = defineStore('airi-card', () => {
 
   const consciousnessStore = useConsciousnessStore()
   const speechStore = useSpeechStore()
+  const hearingStore = useHearingStore()
 
   const {
     activeModel: activeConsciousnessModel,
@@ -70,6 +76,10 @@ export const useAiriCardStore = defineStore('airi-card', () => {
     activeSpeechVoiceId,
     activeSpeechModel,
   } = storeToRefs(speechStore)
+
+  const {
+    activeTranscriptionModel,
+  } = storeToRefs(hearingStore)
 
   const addCard = (card: AiriCard | Card | ccv3.CharacterCardV3) => {
     const newCardId = nanoid()
@@ -100,6 +110,9 @@ export const useAiriCardStore = defineStore('airi-card', () => {
         model: activeSpeechModel.value,
         voice_id: activeSpeechVoiceId.value,
       },
+      hearing: {
+        model: activeTranscriptionModel.value,
+      },
     }
 
     // Return default if no extension exists
@@ -123,6 +136,9 @@ export const useAiriCardStore = defineStore('airi-card', () => {
           rate: existingExtension.modules?.speech?.rate,
           ssml: existingExtension.modules?.speech?.ssml,
           language: existingExtension.modules?.speech?.language,
+        },
+        hearing: {
+          model: existingExtension.modules?.hearing?.model ?? defaultModules.hearing.model,
         },
         vrm: existingExtension.modules?.vrm,
         live2d: existingExtension.modules?.live2d,
@@ -206,6 +222,7 @@ export const useAiriCardStore = defineStore('airi-card', () => {
     activeConsciousnessModel.value = extension?.modules?.consciousness?.model
     activeSpeechModel.value = extension?.modules?.speech?.model
     activeSpeechVoiceId.value = extension?.modules?.speech?.voice_id
+    activeTranscriptionModel.value = extension?.modules?.hearing?.model
   })
 
   return {
@@ -224,6 +241,9 @@ export const useAiriCardStore = defineStore('airi-card', () => {
         speech: {
           model: activeSpeechModel.value,
           voice_id: activeSpeechVoiceId.value,
+        },
+        hearing: {
+          model: activeTranscriptionModel.value,
         },
       } satisfies AiriExtension['modules']
     }),

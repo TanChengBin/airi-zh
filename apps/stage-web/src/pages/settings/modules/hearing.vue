@@ -325,8 +325,48 @@ function updateCustomModelName(value: string) {
   activeCustomModelName.value = value
 }
 
+// 请求音频权限
+async function requestAudioPermission() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    if (stream) {
+      console.warn('音频权限已授予')
+      // 停止流以释放资源
+      stream.getTracks().forEach(track => track.stop())
+      // 重新加载设备列表
+      window.location.reload()
+    }
+  }
+  catch (error) {
+    console.error('请求音频权限失败:', error)
+    console.warn('请求音频权限失败，请检查浏览器设置或联系管理员。')
+  }
+}
+
 onMounted(async () => {
   await hearingStore.loadModelsForProvider(activeTranscriptionProvider.value)
+})
+
+// 自动选择默认音频输入设备（当设备列表加载完成且尚未选择时）
+watch(audioInputs, (list) => {
+  if (list.length > 0 && (!selectedAudioInput.value || selectedAudioInput.value.length === 0)) {
+    // 优先选择默认设备，如果没有则选择第一个
+    const defaultDevice = list.find(device => device.deviceId === 'default')
+    const selectedDevice = defaultDevice?.deviceId || list[0].deviceId
+    selectedAudioInput.value = selectedDevice
+  }
+}, { immediate: true })
+
+// 确保在组件挂载时也尝试选择设备
+onMounted(async () => {
+  await hearingStore.loadModelsForProvider(activeTranscriptionProvider.value)
+
+  // 如果设备列表已加载但还没有选择设备，则选择第一个
+  if (audioInputs.value.length > 0 && (!selectedAudioInput.value || selectedAudioInput.value.length === 0)) {
+    const defaultDevice = audioInputs.value.find(device => device.deviceId === 'default')
+    const selectedDevice = defaultDevice?.deviceId || audioInputs.value[0].deviceId
+    selectedAudioInput.value = selectedDevice
+  }
 })
 
 onUnmounted(() => {
@@ -347,15 +387,29 @@ onUnmounted(() => {
         <div>
           <FieldSelect
             v-model="selectedAudioInput"
-            label="Audio Input Device"
-            description="Select the audio input device for your hearing module."
+            :label="t('settings.pages.providers.provider.common.fields.field.transcription.audio-input-device.label')"
+            :description="t('settings.pages.providers.provider.common.fields.field.transcription.audio-input-device.description')"
             :options="audioInputs.map(input => ({
               label: input.label || input.deviceId,
               value: input.deviceId,
             }))"
-            placeholder="Select an audio input device"
+            :placeholder="t('settings.pages.providers.provider.common.fields.field.transcription.audio-input-device.placeholder')"
             layout="vertical"
           />
+          <!-- 如果没有检测到音频设备，显示权限请求按钮 -->
+          <div v-if="audioInputs.length === 0" class="mt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              @click="requestAudioPermission"
+            >
+              请求音频权限
+            </Button>
+            <div class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              点击按钮获取音频输入设备权限
+            </div>
+          </div>
         </div>
 
         <div flex="~ col gap-4">

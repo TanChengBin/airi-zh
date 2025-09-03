@@ -53,6 +53,7 @@ const moduleSettings = computed(() => {
     consciousness: airiExt.consciousness?.model || '',
     speech: airiExt.speech?.model || '',
     voice: airiExt.speech?.voice_id || '',
+    hearing: airiExt.hearing?.model || '',
   }
 })
 
@@ -273,7 +274,7 @@ const activeTab = computed({
 
             <!-- Modules -->
             <div v-if="activeTab === 'modules'">
-              <div grid="~ cols-1 sm:cols-3" gap-4>
+              <div grid="~ cols-1 sm:cols-2 lg:cols-4" gap-4>
                 <div
                   flex="~ col"
                   bg="white/60 dark:black/30"
@@ -322,6 +323,23 @@ const activeTab = computed({
                   </span>
                   <div truncate font-medium>
                     {{ moduleSettings.voice ?? 'default' }}
+                  </div>
+                </div>
+
+                <div
+                  flex="~ col"
+                  bg="white/60 dark:black/30"
+                  gap-2 rounded-lg p-3
+                  border="~ neutral-200/50 dark:neutral-700/30"
+                  transition="all duration-200"
+                  hover="bg-white/80 dark:bg-black/40"
+                >
+                  <span flex="~ row" items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400>
+                    <div i-lucide:ear />
+                    {{ t('settings.pages.card.hearing.model') }}
+                  </span>
+                  <div truncate font-medium>
+                    {{ moduleSettings.hearing ?? 'default' }}
                   </div>
                 </div>
               </div>
